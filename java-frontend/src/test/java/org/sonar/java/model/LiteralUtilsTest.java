@@ -290,6 +290,24 @@ class LiteralUtilsTest {
     assertThat(LiteralUtils.isNegOne(boolTree)).isFalse();
   }
 
+  @Test
+  void getAsStringValue_for_string() {
+    LiteralTree stringLiteral = getLiteral("\"ABC\"");
+    assertThat(LiteralUtils.getAsStringValue(stringLiteral)).isEqualTo("ABC");
+    LiteralTree textBlock = getLiteral("\"\"\"\nABC\"\"\"");
+    assertThat(LiteralUtils.getAsStringValue(textBlock)).isEqualTo("ABC");
+    LiteralTree multilineString = getLiteral("\"ABC\\nABC\"");
+    assertThat(LiteralUtils.getAsStringValue(multilineString)).isEqualTo("ABC\nABC");
+    LiteralTree multilineTB = getLiteral("\"\"\"\n      ABC\n      ABC\"\"\"");
+    assertThat(LiteralUtils.getAsStringValue(multilineTB)).isEqualTo("ABC\nABC");
+    LiteralTree multilineIndentInTB = getLiteral("\"\"\"\n      ABC\n    ABC\"\"\"");
+    assertThat(LiteralUtils.getAsStringValue(multilineIndentInTB)).isEqualTo("  ABC\nABC");
+    LiteralTree textBlockWithTab = getLiteral("\"\"\"\n      \tABC\"\"\"");
+    assertThat(LiteralUtils.getAsStringValue(textBlockWithTab)).isEqualTo("ABC");
+    LiteralTree textBlockWithEmptyLines = getLiteral("\"\"\"\n\n\n      \tABC\"\"\"");
+    assertThat(LiteralUtils.getAsStringValue(textBlockWithEmptyLines)).isEqualTo("\n\n      \tABC");
+  }
+
 
   private ExpressionTree getFirstExpression(String code) {
     ClassTree firstType = getClassTree(code);
@@ -306,5 +324,10 @@ class LiteralUtilsTest {
   private ClassTree getClassTree(String code) {
     CompilationUnitTree compilationUnitTree = JParserTestUtils.parse("class A { " + code + "}");
     return (ClassTree) compilationUnitTree.types().get(0);
+  }
+
+  private LiteralTree getLiteral(String code) {
+    ClassTree classTree = getClassTree("Object o = " + code + ";");
+    return (LiteralTree) ((VariableTree) classTree.members().get(0)).initializer();
   }
 }
